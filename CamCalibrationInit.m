@@ -1,5 +1,6 @@
 %% INIT - an outline of the camera calibration setup 
 %% determining how large the ARUCO and CHECKERBOARD markers will need to be for effective testing
+% Author: Natalie Kehoe
 
 poseCam = [0,0,2800];
 poseOrigin = [0,0,0];

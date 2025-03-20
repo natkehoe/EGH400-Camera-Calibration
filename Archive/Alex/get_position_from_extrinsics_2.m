@@ -1,13 +1,23 @@
+%% Get position from extrinsics
+% Author: Alexander Allan
+
+addpath("./Archive/Alex/")
+addpath("./Archive/Alex/Updated_camera_session")
+
 % Load the calibration session
 calibrationData = load('UPDATED_Session.mat');
+%%
 % Extract camera parameters
 cameraParams = calibrationData.calibrationSession.CameraParameters;
+
 % Load the new image (that wasn't in the session)
 imageFileName = 'secondextrinsic1.png';
 newImage = imread(imageFileName);
+
 % Detect the checkerboard points (adjust the square size and pattern size accordingly)
 squareSize = 29;  % Set the size of a square in the checkerboard (in millimeters)
 [imagePoints, boardSize] = detectCheckerboardPoints(newImage);
+
 % Check if checkerboard was detected
 if isempty(imagePoints)
     error('No checkerboard detected in the image.');

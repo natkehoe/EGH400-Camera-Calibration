@@ -1,4 +1,6 @@
 %% Calculating the area covered by the camera based on init 
+% Author: Natalie Kehoe
+
 clc, clear all, close all
 
 load init.mat
