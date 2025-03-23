@@ -8,6 +8,7 @@ load init.mat
 % Calculate area covered by camera
 thetas = cam.FoV/2;
 height = h1;
+% height = 1.5;
 xy = (height*atan(thetas)) * 2;
 
 area = xy(1)*xy(2);
