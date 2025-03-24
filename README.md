@@ -8,3 +8,13 @@ which can impact the tracking of the aruco marker by giving false readings of th
 MATLAB scripts are created for calibration and comparison with OptiTracker results. Outputs of these scripts include...
 - Camera matrix from the calibration session
 - World Transformations
+
+## `extrinsics_test.m`
+Used to analyse the checkerboard marker image; outputs the checkerboard origin position.
+
+## TEST1_CameraCalibration1
+
+### `WorldTransfromations11.m`
+Creates the 3D environment of the Optitracker global position; camera position (estimated); 
+optitracker output and the checkerboard marker position (based on camera intrinsics).
+By comparing the optitracker output and camera output, the precise camera position can be determined.
