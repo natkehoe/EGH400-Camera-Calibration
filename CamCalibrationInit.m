@@ -2,7 +2,7 @@
 %% determining how large the ARUCO and CHECKERBOARD markers will need to be for effective testing
 % Author: Natalie Kehoe
 
-poseCam = [0,0,2800];
+poseCam = [0,0,2420];
 poseOrigin = [0,0,0];
 
 

@@ -3,6 +3,7 @@ clc, clear all, close all
 load calibrationSession11.mat
 
 %% COMMON TRANSFORMATIONS %%
+inv_XYZ = [-1 0 0; 0 -1 0; 0 0 -1];
 inv_X = [-1 0 0; 0 1 0; 0 0 1]; % invert X
 inv_Y = [1 0 0; 0 -1 0; 0 0 1];
 inv_Z = [1 0 0; 0 1 0; 0 0 -1];
@@ -37,6 +38,8 @@ cam_est_R = cam_est_R * inv_X; % still needs to be done outside of quaternions
 % Origin-to-Camera frame transform
 origin2cam_T = GetTransformMat(cam_est_t, cam_est_R);
 
+marker2cam_R = cam_est_R * inv_XYZ; % inverse all when referencing from extrinsics to camera intrinsics
+
 %% Get checkerboard position - OPTITRACKER
 
 % optiMarker raw output:
@@ -70,7 +73,7 @@ optiMarker_R = rotmat(optiMarker_q, 'point');
 % loc_origin_R = origin_R;
 
 %% Get checkerboard position
-camCheckerboardTracking = load("C:\Users\nhkje\git\EGH400-Camera-Calibration\TEST1_CameraCalibration1\camCheckerboardTracking11.mat");
+camCheckerboardTracking = load("camCheckerboardTracking11.mat");
 
 camCheckerboard_t = camCheckerboardTracking.marker.position; % [mm]
 camCheckerboard_q = quaternion(camCheckerboardTracking.marker.q);
@@ -78,7 +81,7 @@ camCheckerboard_R = rotmat(camCheckerboard_q, 'point');
 
 % transform to world
 [check2world_t, check2world_R] = Get2Transform(camCheckerboard_t, camCheckerboard_R,...
-                                                    cam_est_t, cam_est_R);
+                                                    cam_est_t, marker2cam_R);
 
 
 %% --- FIGURE --- %%
@@ -95,12 +98,12 @@ xlabel('X'), ylabel('Y'), zlabel('Z')
 xlim([-2000,0]), ylim([0,2000])
 legend({'' '' '' 'Origin', ...
         '' '' '' 'Camera', ...
-        '' '' '' 'Local', ...
+        '' '' '' 'Optitrack Marker', ...
         '' '' '' 'CheckerboardMarker'})
 
 
 figure(2), clf
-[A, map] = imread(camCheckerboardTracking.imageFileName);
+[A, map] = imread("img2025-03-21 18_09_53.864305.png");
 imshow(A, map)
 
 
