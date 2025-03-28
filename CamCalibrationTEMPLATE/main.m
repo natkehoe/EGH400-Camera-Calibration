@@ -14,7 +14,7 @@ saveCheckerboardTrackingFileName = ['camCheckerboardTracking', revision, '.mat']
 % Calculate and save checkerboard location to .mat file
     % extrinsics_test(saveCheckerboardTrackingFileName, calibrationData, imageFileName)
     % camCheckerboardTracking = load(saveCheckerboardTrackingFileName);
-camCheckerboardTracking = extrinsics_test(calibrationData, imageFileName)
+camCheckerboardTracking = Extrinsics_Test(calibrationData, imageFileName);
 
 
 %% Get checkerboard position - OPTITRACKER
@@ -40,7 +40,7 @@ optiMarker = [opti.x; ...
 %% 2 Run WorldTransformations.m
 saveTransforms = ['worldTransforms', revision, '.mat'];
 
-% calculate and save world transforms
+% calculate and save world transforms in .mat specified in 'saveTransforms'
 WorldTransformations(saveTransforms, camCheckerboardTracking, optiMarker)
 load(saveTransforms)
 

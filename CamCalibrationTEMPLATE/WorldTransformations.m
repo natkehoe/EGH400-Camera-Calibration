@@ -35,15 +35,28 @@ origin2cam_T = GetTransformMat(cam_est_t, cam_est_R);
 
 marker2cam_R = cam_est_R * inv_XYZ; % inverse all when referencing from extrinsics to camera intrinsics
 
-%% OptiTracker marker transformations -------------------- EDIT THIS... MISSING TRANSFORM?
-optiMarker_t = optiMarker(1:3);
-optiMarker_q = quaternion(optiMarker(4:7)');
+%% --- OPTITRACK SYSTEM --- %%
 
-optiMarker_R = rotmat(optiMarker_q, 'point');
+% TF frame from checkerboard marker to checkerboard (world position)
+checkerboardmarker2checkerboard = [0, -0.014, 0, 0, -1.57079633, 1.57079633];
+cm2c_t = checkerboardmarker2checkerboard(1:3)';
+cm2c_q = quaternion(checkerboardmarker2checkerboard(4:6), 'euler', 'ZYX', 'frame'); % <----- is ZYX correct????
+cm2c_R = rotmat(cm2c_q, 'frame');
 
-% transform to world
+% OptiTracker marker raw data
+optiMarkerRaw_t = optiMarker(1:3);
+optiMarkerRaw_q = quaternion(optiMarker(4:7)');
 
-%% Get checkerboard position
+optiMarkerRaw_R = rotmat(optiMarkerRaw_q, 'point');
+
+% transform to world...
+% [optiMarker_t, optiMarker_R, ~] = Get2Transform(optiMarkerRaw_t, optiMarkerRaw_R, cm2c_t, cm2c_R);
+optiMarker_t = optiMarkerRaw_t;
+optiMarker_R = optiMarkerRaw_R;
+
+
+%% --- CAMERA SYSTEM --- %%
+% Get checkerboard position
 
 camCheckerboard_t = camCheckerboardTracking.marker.position; % [mm]
 camCheckerboard_q = quaternion(camCheckerboardTracking.marker.q);
@@ -62,6 +75,7 @@ figure(1), clf
     DisplayAxes("Origin", 'k', origin_t, origin_R), hold on
     DisplayAxes("Camera", 'r', cam_est_t, cam_est_R)
     % DisplayAxes("LocalOrigin", 'b', loc_origin_t, loc_origin_R)
+    % DisplayAxes("Optitrack Marker", 'y', optiMarkerRaw_t, optiMarkerRaw_R)
     DisplayAxes("Optitrack Marker", 'y', optiMarker_t, optiMarker_R)
     DisplayAxes("Camera Marker", 'g', check2world_t, origin_R)
 xlabel('X'), ylabel('Y'), zlabel('Z')
@@ -78,16 +92,17 @@ imshow(A, map)
 
 
 %% --- FUNCTIONS --- %%
-function [new_t, new_R, T] = Get2Transform(curr_t, curr_R, t, R)
+function [new_t, new_R, T] = Get2Transform(curr_t, curr_R, frame_t, frame_R)
+    % get the new transformation from points based on the current pose (curr_t, curr_R) and the frame (t, R)
     % curr_pos = [x,y,z,qw,qx,qy,qz]
-    % t = translation vector
-    % R = rotation matrix
+    % frame_t = translation vector
+    % frame_R = rotation matrix
 
-    T = GetTransformMat(t, R);
+    T = GetTransformMat(frame_t, frame_R);
 
     new_t = T * [curr_t(1:3); 1];
     new_t = new_t(1:3); % remove additional 1 at end - homogeneous to normal
-    new_R = curr_R * R;
+    new_R = curr_R * frame_R;
 end
 
 function T = GetTransformMat(t, R)
