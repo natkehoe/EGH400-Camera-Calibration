@@ -28,18 +28,19 @@ cam_est_R = rotmat(cam_est_q, 'frame');
 
 
 % camera x-axis is inverted (RS)
-cam_est_R = cam_est_R * inv_X; % still needs to be done outside of quaternions
+% cam_est_R = cam_est_R * inv_X; % still needs to be done outside of quaternions
 
 % Origin-to-Camera frame transform
 origin2cam_T = GetTransformMat(cam_est_t, cam_est_R);
 
 marker2cam_R = cam_est_R * inv_XYZ; % inverse all when referencing from extrinsics to camera intrinsics
+% marker2cam_R = cam_est_R; % inverse all when referencing from extrinsics to camera intrinsics
 
 %% --- OPTITRACK SYSTEM --- %%
 
 % TF frame from checkerboard marker to checkerboard (world position)
 checkerboardmarker2checkerboard = [0, -0.014, 0, 0, -1.57079633, 1.57079633];
-cm2c_t = checkerboardmarker2checkerboard(1:3)';
+cm2c_t = checkerboardmarker2checkerboard(1:3)'; % cm2c = short for 'checkerboardmarker2checkerboard'
 cm2c_q = quaternion(checkerboardmarker2checkerboard(4:6), 'euler', 'ZYX', 'frame'); % <----- is ZYX correct????
 cm2c_R = rotmat(cm2c_q, 'frame');
 
@@ -47,7 +48,7 @@ cm2c_R = rotmat(cm2c_q, 'frame');
 optiMarkerRaw_t = optiMarker(1:3);
 optiMarkerRaw_q = quaternion(optiMarker(4:7)');
 
-optiMarkerRaw_R = rotmat(optiMarkerRaw_q, 'point');
+optiMarkerRaw_R = rotmat(optiMarkerRaw_q, 'point'); % frame or point? search
 
 % transform to world...
 % [optiMarker_t, optiMarker_R, ~] = Get2Transform(optiMarkerRaw_t, optiMarkerRaw_R, cm2c_t, cm2c_R);
@@ -58,8 +59,13 @@ optiMarker_R = optiMarkerRaw_R;
 %% --- CAMERA SYSTEM --- %%
 % Get checkerboard position
 
-camCheckerboard_t = camCheckerboardTracking.marker.position; % [mm]
-camCheckerboard_q = quaternion(camCheckerboardTracking.marker.q);
+camCheckerboardPose = camCheckerboardTracking.marker2camera;
+
+% camCheckerboard_t = camCheckerboardTracking.marker.position; % [mm]
+camCheckerboard_t = [camCheckerboardPose.x, camCheckerboardPose.y, camCheckerboardPose.z]'; % [mm]
+camCheckerboard_qMat = [camCheckerboardPose.qw, camCheckerboardPose.qx, camCheckerboardPose.qy, camCheckerboardPose.qz]; % [qw, qx, qy, qz]
+
+camCheckerboard_q = quaternion(camCheckerboard_qMat);
 camCheckerboard_R = rotmat(camCheckerboard_q, 'point');
 
 % transform to world

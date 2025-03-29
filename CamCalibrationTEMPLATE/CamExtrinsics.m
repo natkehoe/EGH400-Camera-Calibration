@@ -1,4 +1,4 @@
-function output = CamExtrinsics(calibrationData, imageFilename)
+function output = CamExtrinsics(calibrationData, imageFileName)
 %% ! RUN VIA MAIN.M
 % Sourced from: https://au.mathworks.com/help/vision/ref/estimateextrinsics.html
 
@@ -6,7 +6,7 @@ function output = CamExtrinsics(calibrationData, imageFilename)
 cameraParams = calibrationData.calibrationSession.CameraParameters;
 
 % Load image
-image = imread(imageFilename);
+image = imread(imageFileName);
 
 % Detect points
 squareSize = calibrationData.calibrationSession.PatternSet.SquareSize; % size of one square on the checkerboard [mm]
@@ -29,6 +29,8 @@ output.marker2camera.qx = P_q(1);
 output.marker2camera.qy = P_q(2);
 output.marker2camera.qz = P_q(3);
 output.marker2camera.qw = P_q(4);
+
+output.imageFileName = imageFileName;
 
 % Display marker2camera transform
 fprintf('\n\nmarker2camera transformation:\n')

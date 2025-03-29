@@ -14,7 +14,7 @@ saveCheckerboardTrackingFileName = ['camCheckerboardTracking', revision, '.mat']
 % Calculate and save checkerboard location to .mat file
     % extrinsics_test(saveCheckerboardTrackingFileName, calibrationData, imageFileName)
     % camCheckerboardTracking = load(saveCheckerboardTrackingFileName);
-camCheckerboardTracking = Extrinsics_Test(calibrationData, imageFileName);
+camCheckerboardTracking = CamExtrinsics(calibrationData, imageFileName)
 
 
 %% Get checkerboard position - OPTITRACKER
@@ -46,6 +46,29 @@ load(saveTransforms)
 
 % Difference in optitracker and marker positions:
 diff = optiMarker_t - check2world_t
+
+%% Comparison to cam extrinsics and world transformations
+% ORIGIN = origin_x
+% CAMERA = cam_est_x <--- TO BE REPLACED.
+% OPTITRACK MARKER = optiMarker_x
+% CAMERA MERKER = check2world_x
+
+patternExtrinsics_t = calibrationData.calibrationSession.CameraParameters.PatternExtrinsics(1,1).Translation'
+patternExtrinsics_R = calibrationData.calibrationSession.CameraParameters.PatternExtrinsics(1,1).R
+
+diff = patternExtrinsics_t - check2world_t;
+
+if any(diff)
+    dEuclidean = sqrt(sum(abs(patternExtrinsics_t.^2 - check2world_t.^2)));
+    fprintf("There is %.4f mm difference between real and estimated check2world points.\n", dEuclidean*1000)
+else
+
+    fprintf("Real and estimated check2world points are identical.")
+end
+
+
+
+
 
 
 
