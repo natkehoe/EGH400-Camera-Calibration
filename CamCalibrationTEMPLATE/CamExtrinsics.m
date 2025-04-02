@@ -13,18 +13,23 @@ intrinsics = cameraParams.Intrinsics;
 image = imread(imageFileName);
 
 % Show raw image
-figure(100), imshow(image), title("CamExtrinsics - Input Image")
+figure(100), imshow(image), title("CamExtrinsics - Raw Input Image")
 
 % Undistort image
-[im, newIntrinsics] = undistortImage(image, intrinsics, OutputView = "full");
+[image2, newIntrinsics] = undistortImage(image, intrinsics, OutputView = "full");
+
+% Show undistorted image
+figure(101), imshow(image2), title("CamExtrinsics - Undistorted Image")
+
 
 % Detect points from calibration images
 squareSize = calibrationData.calibrationSession.PatternSet.SquareSize; % size of one square on the checkerboard [mm]
-[imagePoints, boardSize] = detectCheckerboardPoints(image);
+% [imagePoints, boardSize] = detectCheckerboardPoints(image); % OLD
+[imagePoints, ~] = detectCheckerboardPoints(image2); % detect keypoints of checkerboard calibration image
 
 % Compensate for coordinate system shift
 imOrigin = intrinsics.PrincipalPoint - newIntrinsics.PrincipalPoint;
-imagePoints = imagePoints + imOrigin; % not sure if this is correct
+imagePoints = imagePoints + imOrigin; % REQUIRED - now looking at 'undistorted' image
 
 % % Check if checkerboard was detected (OLD METHOD)
 % [R,t] = extrinsics(imagePoints, cameraParams.WorldPoints, cameraParams); % [NOT RECOMMENDED]
@@ -39,6 +44,7 @@ t = pose.Translation;
 % --- END ESTIMATE EXTRINSICS ---
 
 P_camera = -R * t';
+% P_camera = R * t';
 
 P_q = rotm2quat(R);
 

@@ -4,7 +4,7 @@ clc, clear all, close all
 %% 1 Get extrinsics
 revision = '';
 calibrationDataMat = "calibrationSession11.mat"; % filename of camera calibration
-calibrationData = load(calibrationDataMat);
+calibSession = load(calibrationDataMat);
 
 imageFileName = "img2025-03-21 18_09_53.864305.png"; % checkerboard image
 
@@ -14,7 +14,7 @@ saveCheckerboardTrackingFileName = ['camCheckerboardTracking', revision, '.mat']
 % Calculate and save checkerboard location to .mat file
     % extrinsics_test(saveCheckerboardTrackingFileName, calibrationData, imageFileName)
     % camCheckerboardTracking = load(saveCheckerboardTrackingFileName);
-camCheckerboardTracking = CamExtrinsics(calibrationData, imageFileName)
+camCheckerboardTracking = CamExtrinsics(calibSession, imageFileName)
 
 
 %% Get checkerboard position - OPTITRACKER
@@ -54,18 +54,19 @@ diff = optiMarker_t - check2world_t
 % CAMERA MERKER = check2world_x
 
 % Throw error if extrinsics not in units [mm]
-assert(calibrationData.calibrationSession.CameraParameters.WorldUnits == "millimeters", 'Extrinsics not in mm');
+assert(calibSession.calibrationSession.CameraParameters.WorldUnits == "millimeters", 'Extrinsics not in mm');
 
-% Get raw patternExtrinsics (marker2camera)
-patternExtrinsicsRaw_t = calibrationData.calibrationSession.CameraParameters.PatternExtrinsics(1,1).Translation';
-patternExtrinsicsRaw_R = calibrationData.calibrationSession.CameraParameters.PatternExtrinsics(1,1).R;
+% Get raw patternExtrinsics (marker2camera) from previous calibration
+% session
+patternExtrinsicsRaw_t = calibSession.calibrationSession.CameraParameters.PatternExtrinsics(1,1).Translation';
+patternExtrinsicsRaw_R = calibSession.calibrationSession.CameraParameters.PatternExtrinsics(1,1).R;
 
 % patternExtrinsicsInv_t = patternExtrinsicsRaw_t .* -1; %% invert patternExtrinsics
-patternExtrinsicsInv_t = patternExtrinsicsRaw_t;
+% patternExtrinsicsInv_t = patternExtrinsicsRaw_t;
 
 % Get pattern extrinsics to world frame (check2world)
 [patternExtrinsicsTransformed_t, patternExtrinsicsTransformed_R, ~] ...
-    = Get2Transform(patternExtrinsicsInv_t, patternExtrinsicsRaw_R, cam_est_t, cam_est_R);
+    = Get2Transform(patternExtrinsicsRaw_t, patternExtrinsicsRaw_R, cam_est_t, cam_est_R);
 
 diff = patternExtrinsicsTransformed_t - check2world_t;
 
@@ -85,21 +86,29 @@ figure(1), clf
     DisplayAxes("Origin", 'k', origin_t, origin_R), hold on
     DisplayAxes("Camera", 'r', cam_est_t, cam_est_R)
     DisplayAxes("Optitrack Marker", 'y', optiMarker_t, optiMarker_R)
-    DisplayAxes("Camera Marker", 'g', check2world_t, origin_R)
+    % DisplayAxes("Camera Marker", 'g', check2world_t, origin_R)
+    DisplayAxes("Camera Marker", 'g', check2world_t, check2world_R)
     DisplayAxes("Camera Extrinsics", 'b', patternExtrinsicsTransformed_t, patternExtrinsicsTransformed_R)
+    DisplayAxes("Raw marker2camera Pose", 'r', camCheckerboardTracking.t', camCheckerboardTracking.R)
+    DisplayAxes("Raw marker2camera Pose", 'magenta', camCheckerboardTracking.t' .* -1, camCheckerboardTracking.R .* -1)
+    DisplayAxes("Raw marker2camera Pose", 'cyan', camCheckerboardTracking.t' .* -1, -camCheckerboardTracking.R)
 xlabel('X'), ylabel('Y'), zlabel('Z')
 % xlim([-2000,0]), ylim([0,2000])
 legend({'' '' '' 'Origin', ...
         '' '' '' 'Camera', ...
         '' '' '' 'Optitrack Marker', ...
         '' '' '' 'CheckerboardMarker', ...
-        '' '' '' 'Camera Extrinsics'}, "Location","southwest")
+        '' '' '' 'Camera Extrinsics', ...
+        '' '' '' 'Raw marker2camera Pose'}, "Location","southwest")
 
 
-% figure(2), clf
-% [A, map] = imread(camCheckerboardTracking.imageFileName);
-% imshow(A, map)
-
+%% checks
+RPY_pE = rotmat2vec3d(patternExtrinsicsTransformed_R);
+RPY_check2world = rotmat2vec3d(check2world_R);
+fprintf("\n\nRPY - PatternExtrinsics: [%.2f, %.2f, %.2f]\n", ...
+    RPY_pE(1), RPY_pE(2), RPY_pE(3))
+fprintf("RPY - marker2camera: [%.2f, %.2f, %.2f]\n", ...
+    RPY_check2world(1), RPY_check2world(2), RPY_check2world(3))
 
 
 

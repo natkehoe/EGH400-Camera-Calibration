@@ -23,17 +23,38 @@ board_Z = 828.5;
 
 % CALCULATE CAMERA ROTATIONS
 % cam_est_R = eul2rotm([pi, 0, pi]);
-cam_est_q = quaternion([pi,0,0], 'euler', 'ZYX', 'frame'); % Convert from euler degrees to quaternion
+cam_est_q = quaternion([0,0,0], 'euler', 'ZYX', 'frame'); % Convert from euler degrees to quaternion
 cam_est_R = rotmat(cam_est_q, 'frame');
 
 
 % camera x-axis is inverted (RS)
 % cam_est_R = cam_est_R * inv_Z; % makes point go up instead of down
 
-% Origin-to-Camera frame transform
-origin2cam_T = GetTransformMat(cam_est_t, cam_est_R);
+% % Origin-to-Camera frame transform
+% origin2cam_T = GetTransformMat(cam_est_t, cam_est_R);
 
 
+%% --- CAMERA SYSTEM --- %%
+% Get checkerboard position
+
+marker2camera = camCheckerboardTracking.marker2camera;
+% 
+% % Calculate translation and rotations
+% camCheckerboard_t = camCheckerboardTracking.marker.position; % [mm]
+% camCheckerboard_t = [marker2camera.x, marker2camera.y, marker2camera.z]'; % [mm]
+% camCheckerboard_qMat = [marker2camera.qw, marker2camera.qx, marker2camera.qy, marker2camera.qz]; % [qw, qx, qy, qz]
+% 
+% camCheckerboard_q = quaternion(camCheckerboard_qMat);
+% camCheckerboard_R = rotmat(camCheckerboard_q, 'point');
+
+% Get camCheckerboard translation vector and rotation matrix
+camCheckerboard_t = [marker2camera.x, marker2camera.y, marker2camera.z]'; % [mm]
+camCheckerboard_R = camCheckerboardTracking.R;
+
+
+% transform to world
+[check2world_t, check2world_R] = Get2Transform(camCheckerboard_t, camCheckerboard_R,...
+                                                    cam_est_t, cam_est_R);
 
 %% --- OPTITRACK SYSTEM --- %%
 
@@ -55,56 +76,18 @@ optiMarker_t = optiMarkerRaw_t; % change this?
 optiMarker_R = optiMarkerRaw_R;
 
 
-%% --- CAMERA SYSTEM --- %%
-% Get checkerboard position
-
-marker2camera = camCheckerboardTracking.marker2camera;
-
-% camCheckerboard_t = camCheckerboardTracking.marker.position; % [mm]
-camCheckerboard_t = [marker2camera.x, marker2camera.y, marker2camera.z]'; % [mm]
-camCheckerboard_qMat = [marker2camera.qw, marker2camera.qx, marker2camera.qy, marker2camera.qz]; % [qw, qx, qy, qz]
-
-camCheckerboard_q = quaternion(camCheckerboard_qMat);
-camCheckerboard_R = rotmat(camCheckerboard_q, 'point');
-
-% transform to world
-[check2world_t, check2world_R] = Get2Transform(camCheckerboard_t, camCheckerboard_R,...
-                                                    cam_est_t, cam_est_R);
 
 
 
 
 %% --- FUNCTIONS --- %%
 
-
-
-
-
-
-% function DisplayAxes(name, color, t, R)
-%     % translate (T) [3x1 vec] and rotate (R) [3x3 mat] from origin point
-%     vecs = [1,0,0;... 
-%             0,1,0;... 
-%             0,0,1].*200;    % [x; y; z] axes
-% 
-%     axesCols = ['r', 'g', 'b'];
-% 
-%     new_vecs = zeros(3,3);
-% 
-%     % gcf, hold on
-%     for ii = 1:3
-%         new_vecs(:,ii) = R * vecs(:,ii) + t;
-%         i = [t(1), new_vecs(1,ii)];
-%         j = [t(2), new_vecs(2,ii)];
-%         k = [t(3), new_vecs(3,ii)];
-% 
-%         plot3(i, j, k, 'Color', axesCols(ii));
-%     end
-% 
-%     plot3(t(1), t(2), t(3),...
-%           'MarkerFaceColor', color, 'MarkerEdgeColor', color, 'Marker','o')
-% end
-
-save(savematfile)
+save(savematfile, ...
+    "origin_t", "origin_R",...
+    "cam_est_t", "cam_est_R", ...
+    "camCheckerboard_t", "camCheckerboard_R", ...
+    "check2world_t", "check2world_R", ...
+    "optiMarker_t", "optiMarker_R"...
+    );
 
 end
