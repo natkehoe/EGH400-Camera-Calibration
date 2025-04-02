@@ -16,7 +16,7 @@ image = imread(imageFileName);
 figure(100), imshow(image), title("CamExtrinsics - Raw Input Image")
 
 % Undistort image
-[image2, newIntrinsics] = undistortImage(image, intrinsics, OutputView = "full");
+[image2, newIntrinsics] = undistortImage(image, intrinsics, OutputView = "same"); % "SAME" has least difference error
 
 % Show undistorted image
 figure(101), imshow(image2), title("CamExtrinsics - Undistorted Image")

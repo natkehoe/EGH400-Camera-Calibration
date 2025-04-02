@@ -7,6 +7,7 @@ calibrationDataMat = "calibrationSession11.mat"; % filename of camera calibratio
 calibSession = load(calibrationDataMat);
 
 imageFileName = "img2025-03-21 18_09_53.864305.png"; % checkerboard image
+% imageFileName = "CalibrationImages/img2025-03-21 18_16_56.245860-cornercovered.png"; % checkerboard image
 
 
 saveCheckerboardTrackingFileName = ['camCheckerboardTracking', revision, '.mat'];
@@ -45,7 +46,7 @@ WorldTransformations(saveTransforms, camCheckerboardTracking, optiMarker)
 load(saveTransforms)
 
 % Difference in optitracker and marker positions:
-diff = optiMarker_t - check2world_t
+% diff1 = optiMarker_t - check2world_t
 
 %% Comparison to cam extrinsics and world transformations
 % ORIGIN = origin_x
@@ -58,8 +59,10 @@ assert(calibSession.calibrationSession.CameraParameters.WorldUnits == "millimete
 
 % Get raw patternExtrinsics (marker2camera) from previous calibration
 % session
-patternExtrinsicsRaw_t = calibSession.calibrationSession.CameraParameters.PatternExtrinsics(1,1).Translation';
-patternExtrinsicsRaw_R = calibSession.calibrationSession.CameraParameters.PatternExtrinsics(1,1).R;
+
+
+patternExtrinsicsRaw_t = calibSession.calibrationSession.CameraParameters.PatternExtrinsics(1).Translation';
+patternExtrinsicsRaw_R = calibSession.calibrationSession.CameraParameters.PatternExtrinsics(1).R;
 
 % patternExtrinsicsInv_t = patternExtrinsicsRaw_t .* -1; %% invert patternExtrinsics
 % patternExtrinsicsInv_t = patternExtrinsicsRaw_t;
@@ -68,10 +71,10 @@ patternExtrinsicsRaw_R = calibSession.calibrationSession.CameraParameters.Patter
 [patternExtrinsicsTransformed_t, patternExtrinsicsTransformed_R, ~] ...
     = Get2Transform(patternExtrinsicsRaw_t, patternExtrinsicsRaw_R, cam_est_t, cam_est_R);
 
-diff = patternExtrinsicsTransformed_t - check2world_t;
+diff2 = patternExtrinsicsTransformed_t - check2world_t
 
-if any(diff)
-    dEuclidean = sqrt(sum(diff.^2));
+if any(diff2)
+    dEuclidean = sqrt(sum(diff2.^2));
     fprintf("There is %.4f mm difference between real and estimated check2world points.\n", dEuclidean)
 else
 
@@ -89,9 +92,9 @@ figure(1), clf
     % DisplayAxes("Camera Marker", 'g', check2world_t, origin_R)
     DisplayAxes("Camera Marker", 'g', check2world_t, check2world_R)
     DisplayAxes("Camera Extrinsics", 'b', patternExtrinsicsTransformed_t, patternExtrinsicsTransformed_R)
-    DisplayAxes("Raw marker2camera Pose", 'r', camCheckerboardTracking.t', camCheckerboardTracking.R)
-    DisplayAxes("Raw marker2camera Pose", 'magenta', camCheckerboardTracking.t' .* -1, camCheckerboardTracking.R .* -1)
-    DisplayAxes("Raw marker2camera Pose", 'cyan', camCheckerboardTracking.t' .* -1, -camCheckerboardTracking.R)
+    % DisplayAxes("Raw marker2camera Pose", 'r', camCheckerboardTracking.t', camCheckerboardTracking.R)
+    % DisplayAxes("Raw marker2camera Pose", 'magenta', camCheckerboardTracking.t' .* -1, camCheckerboardTracking.R .* -1)
+    % DisplayAxes("Raw marker2camera Pose", 'cyan', camCheckerboardTracking.t' .* -1, -camCheckerboardTracking.R)
 xlabel('X'), ylabel('Y'), zlabel('Z')
 % xlim([-2000,0]), ylim([0,2000])
 legend({'' '' '' 'Origin', ...

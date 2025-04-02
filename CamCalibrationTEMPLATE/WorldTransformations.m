@@ -24,7 +24,10 @@ board_Z = 828.5;
 % CALCULATE CAMERA ROTATIONS
 % cam_est_R = eul2rotm([pi, 0, pi]);
 cam_est_q = quaternion([0,0,0], 'euler', 'ZYX', 'frame'); % Convert from euler degrees to quaternion
-cam_est_R = rotmat(cam_est_q, 'frame');
+
+% cam_est_R = rotmat(cam_est_q, 'frame');
+% cam_est_R = rotmat(cam_est_q, 'frame') * inv_Z; % too low from camera origin point (cx,cy)
+cam_est_R = -rotmat(cam_est_q, 'frame') * inv_X; % GOOD
 
 
 % camera x-axis is inverted (RS)

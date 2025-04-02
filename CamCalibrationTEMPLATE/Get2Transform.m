@@ -15,4 +15,5 @@ function [new_t, new_R, T] = Get2Transform(curr_t, curr_R, frame_t, frame_R)
     new_t = T * [curr_t(1:3); 1];
     new_t = new_t(1:3); % remove additional 1 at end - homogeneous to normal
     new_R = curr_R * frame_R;
+    new_R = frame_R * curr_R;
 end
