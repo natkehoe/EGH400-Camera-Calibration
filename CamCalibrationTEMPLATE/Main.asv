@@ -53,15 +53,52 @@ diff = optiMarker_t - check2world_t
 % OPTITRACK MARKER = optiMarker_x
 % CAMERA MERKER = check2world_x
 
-patternExtrinsics_t = calibrationData.calibrationSession.CameraParameters.PatternExtrinsics(1,1).Translation'
-patternExtrinsics_R = calibrationData.calibrationSession.CameraParameters.PatternExtrinsics(1,1).R
+% Throw error if extrinsics not in units [mm]
+assert(calibrationData.calibrationSession.CameraParameters.WorldUnits == "millimeters", 'Extrinsics not in mm');
 
-diff = patternExtrinsics_t - check2world_t;
+% Get raw patternExtrinsics (marker2camera)
+patternExtrinsicsRaw_t = calibrationData.calibrationSession.CameraParameters.PatternExtrinsics(1,1).Translation';
+patternExtrinsicsRaw_R = calibrationData.calibrationSession.CameraParameters.PatternExtrinsics(1,1).R;
+
+patternExtrinsicsInv_t = patternExtrinsicsRaw_t .* -1; %% invert patternExtrinsics
+
+
+% Get pattern extrinsics to world frame 
+[patternExtrinsicsTransformed_t, patternExtrinsicsTransformed_R, ~] ...
+    = Get2Transform(patternExtrinsicsInv_t, patternExtrinsicsRaw_R, cam_est_t, cam_est_R);
+
+diff = patternExtrinsicsTransformed_t - check2world_t;
 
 if any(diff)
-    dEuclidean = sqrt(sum(patternExtrinsics_t.^2 - check2world_t.^2));
-    fprintf("There is %.4f difference b")
+    dEuclidean = sqrt(sum(diff.^2));
+    fprintf("There is %.4f mm difference between real and estimated check2world points.\n", dEuclidean)
+else
+
+    fprintf("Real and estimated check2world points are identical.")
 end
+
+%% --- FIGURE --- %%
+
+% Rotations from origin to camera;
+figure(1), clf
+    grid on, hold on
+    DisplayAxes("Origin", 'k', origin_t, origin_R), hold on
+    DisplayAxes("Camera", 'r', cam_est_t, cam_est_R)
+    DisplayAxes("Optitrack Marker", 'y', optiMarker_t, optiMarker_R)
+    DisplayAxes("Camera Marker", 'g', check2world_t, origin_R)
+    DisplayAxes("Camera Extrinsics", 'b', patternExtrinsicsTransformed_t, patternExtrinsicsTransformed_R)
+xlabel('X'), ylabel('Y'), zlabel('Z')
+% xlim([-2000,0]), ylim([0,2000])
+legend({'' '' '' 'Origin', ...
+        '' '' '' 'Camera', ...
+        '' '' '' 'Optitrack Marker', ...
+        '' '' '' 'CheckerboardMarker', ...
+        '' '' '' 'Camera Extrinsics'}, "Location","southwest")
+
+
+% figure(2), clf
+% [A, map] = imread(camCheckerboardTracking.imageFileName);
+% imshow(A, map)
 
 
 

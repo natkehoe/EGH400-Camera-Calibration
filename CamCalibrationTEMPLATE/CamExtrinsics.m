@@ -4,16 +4,39 @@ function output = CamExtrinsics(calibrationData, imageFileName)
 
 % Get cam parameters
 cameraParams = calibrationData.calibrationSession.CameraParameters;
+intrinsics = cameraParams.Intrinsics;
 
-% Load image
+% % LOAD IMAGES
+% images = imageDatastore
+
+% Load (new) image to get extrinsics from
 image = imread(imageFileName);
 
-% Detect points
+% Show raw image
+figure(100), imshow(image), title("CamExtrinsics - Input Image")
+
+% Undistort image
+[im, newIntrinsics] = undistortImage(image, intrinsics, OutputView = "full");
+
+% Detect points from calibration images
 squareSize = calibrationData.calibrationSession.PatternSet.SquareSize; % size of one square on the checkerboard [mm]
 [imagePoints, boardSize] = detectCheckerboardPoints(image);
 
-% Check if checkerboard was detected
-[R,t] = extrinsics(imagePoints, cameraParams.WorldPoints, cameraParams);
+% Compensate for coordinate system shift
+imOrigin = intrinsics.PrincipalPoint - newIntrinsics.PrincipalPoint;
+imagePoints = imagePoints + imOrigin; % not sure if this is correct
+
+% % Check if checkerboard was detected (OLD METHOD)
+% [R,t] = extrinsics(imagePoints, cameraParams.WorldPoints, cameraParams); % [NOT RECOMMENDED]
+
+% --- ESTIMATE EXTRINSICS - NEW ---
+camExtrinsics = estimateExtrinsics(imagePoints, cameraParams.WorldPoints, newIntrinsics);
+
+pose = extr2pose(camExtrinsics);
+R = pose.R;
+t = pose.Translation;
+
+% --- END ESTIMATE EXTRINSICS ---
 
 P_camera = -R * t';
 
