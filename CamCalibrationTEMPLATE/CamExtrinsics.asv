@@ -2,8 +2,7 @@ function output = CamExtrinsics(calibrationData, imageFileName)
 %% ! RUN VIA MAIN.M
 % Sourced from: https://au.mathworks.com/help/vision/ref/estimateextrinsics.html
 
-detectOption = 1; % [1 = use original image; 2 = undistort image BEFORE detecting points; 3 = undistort detected points AFTER.] 
-    % 1 is most reliable, due to PatternExtrinsics in distorted view.
+detectOption = 2.1; % [1 = use original image; 2 = undistort image BEFORE detecting points; 3 = undistort detected points AFTER.] 
 
 % Get cam parameters
 cameraParams = calibrationData.calibrationSession.CameraParameters;
@@ -27,7 +26,7 @@ switch detectOption
         [image2, newIntrinsics] = undistortImage(image, intrinsics, OutputView = "same"); % "SAME" has least difference error
         
         % Show undistorted image
-        figure(101), imshow(image2), title("CamExtrinsics - Undistorted Image (2.0)")
+        figure(101), imshow(image2), title("CamExtrinsics - Undistorted Image")
         [imagePoints, ~] = detectCheckerboardPoints(image2); % detect keypoints of checkerboard calibration image
 
         % Compensate for coordinate system shift
@@ -40,12 +39,13 @@ switch detectOption
         
         % Undistort image
         % [image2, newIntrinsics] = undistortImage(image, intrinsics, OutputView = "same"); % "SAME" has least difference error
-        [image2, newIntrinsics] = undistortImage(image, cameraParams); % refer to (https://au.mathworks.com/help/vision/ref/undistortimage.html)
-        figure(102), imshow(image2), title("CamExtrinsics - Undistorted Image (2.1)")
+        image2 = undistortImage(image, cameraParams);
 
+        % Show undistorted image
+        figure(101), imshow(image2), title("CamExtrinsics - Undistorted Image")
         [imagePoints, ~] = detectCheckerboardPoints(image2); % detect keypoints of checkerboard calibration image
 
-        % % Compensate for coordinate system shift
+        % Compensate for coordinate system shift
         % imOrigin = intrinsics.PrincipalPoint - newIntrinsics.PrincipalPoint;
         % imagePoints = imagePoints + imOrigin; % REQUIRED - now looking at 'undistorted' image
         
@@ -53,24 +53,12 @@ switch detectOption
 
     case 3
         % undistort points AFTER detection (https://au.mathworks.com/help/vision/ref/undistortpoints.html)
-        % image3 = image;
+        image3 = image;
 
-        % detect points on raw image
-        points = detectCheckerboardPoints(image);
 
-        % undistort points
-        undistortedPoints = undistortPoints(points, intrinsics);
 
-        % undistort image
-        [image3, newIntrinsics] = undistortImage(image, cameraParams);
 
-        % translate undistorted points
-        imOrigin = intrinsics.PrincipalPoint - newIntrinsics.PrincipalPoint;
-        undistortedPoints = [undistortedPoints(:,1) - imOrigin(1), ...
-                             undistortedPoints(:,2) - imOrigin(2)];
-
-        % solve and estimate Extrinsics
-        camExtrinsics = estimateExtrinsics(undistortedPoints, cameraParams.WorldPoints, newIntrinsics);
+        
 end
 
 
@@ -87,9 +75,9 @@ end
 % % [imagePoints, ~] = detectCheckerboardPoints(image2); % detect keypoints of checkerboard calibration image
 % [imagePoints, ~] = detectCheckerboardPoints(image); % detect keypoints of checkerboard calibration image
 
-% Compensate for coordinate system shift
-imOrigin = intrinsics.PrincipalPoint - newIntrinsics.PrincipalPoint;
-imagePoints = imagePoints + imOrigin; % REQUIRED - now looking at 'undistorted' image
+% % Compensate for coordinate system shift
+% imOrigin = intrinsics.PrincipalPoint - newIntrinsics.PrincipalPoint;
+% imagePoints = imagePoints + imOrigin; % REQUIRED - now looking at 'undistorted' image
 
 % % Check if checkerboard was detected (OLD METHOD)
 % [R,t] = extrinsics(imagePoints, cameraParams.WorldPoints, cameraParams); % [NOT RECOMMENDED]
@@ -110,9 +98,9 @@ P_camera = -R * t';
 P_q = rotm2quat(R);
 
 % Save to output
-output.R = R;
+output.R = R; % <--
 output.t = t;
-output.marker2camera.x = P_camera(1);
+output.marker2camera.x = P_camera(1); % <--
 output.marker2camera.y = P_camera(2);
 output.marker2camera.z = P_camera(3);
 output.marker2camera.qx = P_q(1);
