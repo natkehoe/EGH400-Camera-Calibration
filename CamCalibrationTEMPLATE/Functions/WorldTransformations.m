@@ -51,7 +51,8 @@ marker2camera = camCheckerboardTracking.marker2camera;
 % camCheckerboard_R = rotmat(camCheckerboard_q, 'point');
 
 % Get camCheckerboard translation vector and rotation matrix
-camCheckerboard_t = [marker2camera.x, marker2camera.y, marker2camera.z]'; % [mm]
+% camCheckerboard_t = [marker2camera.x, marker2camera.y, marker2camera.z]'; % [mm]
+camCheckerboard_t = camCheckerboardTracking.t';
 camCheckerboard_R = camCheckerboardTracking.R;
 
 
