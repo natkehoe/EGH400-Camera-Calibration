@@ -1,4 +1,13 @@
-function WorldTransformations(savematfile, camCheckerboardTracking, optiMarker)
+function WorldTransformations(savematfile, camExtrinsics, optiMarker)
+% WORLDTRANSFORMATIONS.M
+% 'savematfile' - filename that will load outputs to Main.m
+% 'camExtrinsics' - extrinsic camera parameters and transformations -
+%   used to determine marker2camera transforms
+% 'optiMarker' - optitracking raw data
+
+% OUTPUTS:
+    % 'origin' tra
+
 %% ! RUN FROM MAIN.M
 
 
@@ -40,9 +49,9 @@ cam_est_R = -rotmat(cam_est_q, 'frame') * inv_X; % GOOD
 %% --- CAMERA SYSTEM --- %%
 % Get checkerboard position
 
-marker2camera = camCheckerboardTracking.marker2camera;
-% 
-% % Calculate translation and rotations
+marker2camera = camExtrinsics.marker2camera;
+
+% %% Calculate translation and rotations <-- WRONG
 % camCheckerboard_t = camCheckerboardTracking.marker.position; % [mm]
 % camCheckerboard_t = [marker2camera.x, marker2camera.y, marker2camera.z]'; % [mm]
 % camCheckerboard_qMat = [marker2camera.qw, marker2camera.qx, marker2camera.qy, marker2camera.qz]; % [qw, qx, qy, qz]
@@ -52,8 +61,8 @@ marker2camera = camCheckerboardTracking.marker2camera;
 
 % Get camCheckerboard translation vector and rotation matrix
 % camCheckerboard_t = [marker2camera.x, marker2camera.y, marker2camera.z]'; % [mm]
-camCheckerboard_t = camCheckerboardTracking.t';
-camCheckerboard_R = camCheckerboardTracking.R;
+camCheckerboard_t = camExtrinsics.t';
+camCheckerboard_R = camExtrinsics.R;
 
 
 % transform to world

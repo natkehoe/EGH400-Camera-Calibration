@@ -1,9 +1,12 @@
-function output = CamExtrinsics(calibrationData, imageFileName)
+function camExtrinsics = CamExtrinsics(saveCheckerboardTrackingFileName, calibrationData, imageFileName)
 %% ! RUN VIA MAIN.M
 % Sourced from: https://au.mathworks.com/help/vision/ref/estimateextrinsics.html
 
-detectOption = 2.1; % [1 = use original image; 2 = undistort image BEFORE detecting points; 3 = undistort detected points AFTER.] 
-    % 1 is most reliable, due to PatternExtrinsics in distorted view.
+detectOption = 3; % [1 = use original image; 2 = undistort image BEFORE detecting points; 3 = 2 BUT BETTER; 4 = undistort detected points AFTER.] 
+    % - 1 is most reliable, due to PatternExtrinsics in distorted view.
+    % - 3 should be the one used???; detects in original image and then
+    %    converts points. THIS IS WHAT IT WILL BE LIKE IN ARUCO CAM-MARKER
+    %    DETECTION
 
 % Get cam parameters
 cameraParams = calibrationData.calibrationSession.CameraParameters;
@@ -34,10 +37,13 @@ switch detectOption
             end
 
 
-        camExtrinsics = estimateExtrinsics(imagePoints, worldPoints, intrinsics);
+        estExtrinsics = estimateExtrinsics(imagePoints, worldPoints, intrinsics);
+
+        % `image2` is same as `image`; just for no errors in figure handling.
+        image2 = image;
 
     case 2
-        % undistort image BEOFRE detecting points
+        % undistort image BEFORE detecting points
         
         % Undistort image
         [image2, newIntrinsics] = undistortImage(image, intrinsics, OutputView = "same"); % "SAME" has least difference error
@@ -50,8 +56,8 @@ switch detectOption
         % imOrigin = intrinsics.PrincipalPoint - newIntrinsics.PrincipalPoint;
         % imagePoints = imagePoints + imOrigin; % REQUIRED - now looking at 'undistorted' image
         
-        camExtrinsics = estimateExtrinsics(imagePoints, worldPoints, newIntrinsics);
-    case 2.1
+        estExtrinsics = estimateExtrinsics(imagePoints, worldPoints, newIntrinsics);
+    case 3
         % undistort image BEOFRE detecting points - EDITS
         
         % Undistort image
@@ -78,9 +84,9 @@ switch detectOption
         imOrigin = intrinsics.PrincipalPoint - newIntrinsics.PrincipalPoint;
         imagePoints = imagePoints + imOrigin; % REQUIRED - now looking at 'undistorted' image
         
-        camExtrinsics = estimateExtrinsics(imagePoints, worldPoints, newIntrinsics);
+        estExtrinsics = estimateExtrinsics(imagePoints, worldPoints, newIntrinsics);
 
-    case 3
+    case 4
         % undistort points AFTER detection (https://au.mathworks.com/help/vision/ref/undistortpoints.html)
         % image3 = image;
 
@@ -91,7 +97,7 @@ switch detectOption
         undistortedPoints = undistortPoints(points, intrinsics);
 
         % undistort image
-        [image3, newIntrinsics] = undistortImage(image, cameraParams);
+        [image2, newIntrinsics] = undistortImage(image, cameraParams);
 
         % translate undistorted points
         imOrigin = intrinsics.PrincipalPoint - newIntrinsics.PrincipalPoint;
@@ -99,7 +105,7 @@ switch detectOption
                              undistortedPoints(:,2) - imOrigin(2)];
 
         % solve and estimate Extrinsics
-        camExtrinsics = estimateExtrinsics(undistortedPoints, worldPoints, newIntrinsics);
+        estExtrinsics = estimateExtrinsics(undistortedPoints, worldPoints, newIntrinsics);
 end
 
 
@@ -123,16 +129,10 @@ imagePoints = imagePoints + imOrigin; % REQUIRED - now looking at 'undistorted' 
 % % Check if checkerboard was detected (OLD METHOD)
 % [R,t] = extrinsics(imagePoints, worldPoints, cameraParams); % [NOT RECOMMENDED]
 
-% --- ESTIMATE EXTRINSICS - NEW ---
-% camExtrinsics = estimateExtrinsics(imagePoints, worldPoints, newIntrinsics);
-% camExtrinsics = estimateExtrinsics(imagePoints, worldPoints, intrinsics);
-% 
-% pose = extr2pose(camExtrinsics);
-% R = pose.R;
-% t = pose.Translation;
+% --- ESTIMATE EXTRINSICS ---
 
-R = camExtrinsics.R;
-t = camExtrinsics.Translation;
+R = estExtrinsics.R;
+t = estExtrinsics.Translation;
 
 % --- END ESTIMATE EXTRINSICS ---
 
@@ -144,17 +144,17 @@ P_camera = -R * t';
 P_q = rotm2quat(R);
 
 % Save to output
-output.R = R; % <--
-output.t = t; % <--
-output.marker2camera.x = P_camera(1);
-output.marker2camera.y = P_camera(2);
-output.marker2camera.z = P_camera(3);
-output.marker2camera.qx = P_q(1);
-output.marker2camera.qy = P_q(2);
-output.marker2camera.qz = P_q(3);
-output.marker2camera.qw = P_q(4);
+camExtrinsics.R = R; % <--
+camExtrinsics.t = t; % <--
+camExtrinsics.marker2camera.x = P_camera(1);
+camExtrinsics.marker2camera.y = P_camera(2);
+camExtrinsics.marker2camera.z = P_camera(3);
+camExtrinsics.marker2camera.qx = P_q(1);
+camExtrinsics.marker2camera.qy = P_q(2);
+camExtrinsics.marker2camera.qz = P_q(3);
+camExtrinsics.marker2camera.qw = P_q(4);
 
-output.imageFileName = imageFileName;
+camExtrinsics.imageFileName = imageFileName;
 
 % % Display marker2camera transform
 % fprintf('\n\nmarker2camera transformation:\n')
@@ -172,8 +172,14 @@ figure(100), imshow(image), hold on
     title("CamExtrinsics - Raw Input Image")
     subtitle(imageFileName)
 
+
 figure(102), imshow(image2), hold on
     title("CamExtrinsics - Undistorted Image (2.1)")
     subtitle(imageFileName)
+
+
+%% Save output
+save(saveCheckerboardTrackingFileName, ...
+    "camExtrinsics")
 
 end

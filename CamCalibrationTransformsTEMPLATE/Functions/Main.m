@@ -37,7 +37,8 @@ saveCheckerboardTrackingFileName = ['camCheckerboardTracking', revision, '.mat']
 % Calculate and save checkerboard location to .mat file
     % extrinsics_test(saveCheckerboardTrackingFileName, calibrationData, imageFileName)
     % camCheckerboardTracking = load(saveCheckerboardTrackingFileName);
-camCheckerboardTracking = CamExtrinsics(calibSession, imageFileName);
+% camCheckerboardTracking = CamExtrinsics(calibSession, imageFileName);
+CamExtrinsics(saveCheckerboardTrackingFileName, calibSession, imageFileName);
 
 
 %% Get checkerboard position - OPTITRACKER
