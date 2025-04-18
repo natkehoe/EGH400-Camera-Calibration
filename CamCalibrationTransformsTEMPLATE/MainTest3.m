@@ -3,12 +3,14 @@ clc, clear all, close all
 
 addpath("./Functions/")
 
+
 %% 1 Get calibration intrinsics and extrinsics
 revision = '05';
 calibrationDataMat = "calibrationSession16042025.mat"; % filename of camera calibration
 calibSession = load(calibrationDataMat);
 
 check2cam = calibSession.calibrationSession.CameraParameters.PatternExtrinsics(end,1)
+imageName = calibSession.calibrationSession.PatternSet.PatternLabels(end)
 
 invA = inv(check2cam.A) % pattern to camera
 
