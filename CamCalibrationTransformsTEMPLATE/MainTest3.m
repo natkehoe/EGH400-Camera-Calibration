@@ -22,3 +22,10 @@ checkerboard2camera_q = quaternion(checkerboard2camera_R, 'rotmat', 'frame')
 
 % camera intrinsics
 camIntrinsicsMatrix =  calibSession.calibrationSession.CameraParameters.Intrinsics.K
+
+
+% distCoeffs = [k1, k2, p1, p2]
+radialDistortion = calibSession.calibrationSession.CameraParameters.RadialDistortion;
+tangentialDistortion = calibSession.calibrationSession.CameraParameters.TangentialDistortion;
+
+distCoeffs = [radialDistortion, tangentialDistortion]
